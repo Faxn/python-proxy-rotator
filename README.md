@@ -42,7 +42,6 @@ Change directory to the download destination and run:
 $ python badger.py [-n repetitions]
 
 OPTIONS
--p, --local_proxies				# default operation
 -f, --force_proxy_refresh		# force the program to reverify the proxies 
 -n CHAINLENGTH, --chainlength CHAINLENGTH # number of servers to bounce through
 ```
