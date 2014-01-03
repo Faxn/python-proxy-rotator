@@ -3,9 +3,9 @@ from pipe_server.server import ThreadedPipeServer
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-p', '--local_proxies', action='store_true')
-parser.add_argument('-f', '--force_proxy_refresh', action='store_true')
-parser.add_argument('-n', '--chainlength')
-parser.add_argument('-D', '--debug', action='store_true')
+parser.add_argument('-f', '--force_proxy_refresh', action='store_true', help="force the program to reverify the proxies ")
+parser.add_argument('-n', '--chainlength', default=1, help="number of servers to bounce through")
+parser.add_argument('-D', '--debug', action='store_true', help="debug output")
 args = parser.parse_args()
 
 proxy = ThreadedPipeServer(
