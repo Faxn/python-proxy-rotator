@@ -2,6 +2,8 @@ import threading, collections, sys, socket, os, select, threading
 from tempfile import gettempdir
 
 class ProxyManager():
+	
+    _DEFAULT_TEST_SERVER = 'www.vg.no'
     
     def __init__(self, check_for_tmp):
         self.lock = threading.Lock()
@@ -9,11 +11,8 @@ class ProxyManager():
         self.is_connected = False
         self.http_proxies = collections.deque()
         self.https_proxies = collections.deque()
-        
-        # load from file
-        #threading.Thread( target=self._load_proxies, args=(self.lock,self.killer,check_for_tmp)).start()
         self._load_proxies(self.lock,self.killer,check_for_tmp)
-    
+
     def _print_progress(self, fraction):
         size = 50
         progress = int(round(size * fraction))
@@ -25,7 +24,7 @@ class ProxyManager():
     
     def _load_proxies(self, _lock, _killer, check_for_tmp=True):
         if check_for_tmp and os.path.exists(os.path.join(gettempdir(),'py_http_proxies.txt')):
-            print 'Loading proxies from local tmp...'
+            print('Loading proxies from local tmp...')
             
             file = open(os.path.join(gettempdir(),'py_http_proxies.txt'),'r').readlines()
             for entry in file:
@@ -41,7 +40,7 @@ class ProxyManager():
                 self.https_proxies.append( entry )
                 _lock.release()
         else:
-            print 'Loading proxies from proxylist.txt ...'
+            print('Loading proxies from proxylist.txt ...')
             
             file = open(os.path.join(os.getcwd(),'proxy/proxylist.txt'),'r').readlines()
             dead = []
@@ -57,8 +56,8 @@ class ProxyManager():
                     _lock.release()
                 else: dead.append(entry)
     
-            print "Dead proxies: "
-            for d in dead: print d[0]
+            print("Dead proxies: ")
+            for d in dead: print(d[0])
         
             log = open(os.path.join(gettempdir(),'py_http_proxies.txt'),'w')
             _lock.acquire()
@@ -75,28 +74,28 @@ class ProxyManager():
             log.close()
         
         _lock.acquire()
-        print len(self.https_proxies),' HTTPS proxies with chain support'
-        print len(self.http_proxies),' HTTP proxies'
+        print(len(self.https_proxies),' HTTPS proxies with chain support')
+        print(len(self.http_proxies),' HTTP proxies')
         _lock.release()
         
-    def _test_CONNECT(self, _socket, test_server='www.vg.no'):
+    def _test_CONNECT(self, _socket, test_server=_DEFAULT_TEST_SERVER):
         if self.is_connected:
             _socket.setblocking(0)
             try:
-                _socket.sendall("CONNECT %s HTTP/1.0\r\n\r\n" % test_server )
+                _socket.sendall(bytes("CONNECT %s HTTP/1.0\r\n\r\n" % test_server, "utf-8"))
                 ready = select.select([_socket], [], [], 4)
                 if ready[0]:
-                    resp = _socket.recv(1)
+                    resp = str(_socket.recv(1))
                     while resp.find("\r\n\r\n")==-1:
                         tmp = resp
-                        resp = resp + _socket.recv(1)
+                        resp = resp + str(_socket.recv(1))
                         if tmp == resp: raise socket.error
                     statusline = resp.splitlines()[0].split(" ",2)
                 
                     statuscode = int(statusline[1])
                     return (statuscode == 200)
             except socket.error: pass
-            except ValueError, e: print 'ERROR chaining: ',e
+            except ValueError as e: print('ERROR chaining: ',e)
         return False
     
     def _test_alive(self, _socket, server):
